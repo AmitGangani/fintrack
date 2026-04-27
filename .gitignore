@@ -1,0 +1,33 @@
+# Build outputs
+target/
+**/target/
+out/
+
+# Java artifacts
+*.class
+*.jar
+*.war
+*.ear
+
+# Logs
+*.log
+logs/
+
+# IDE and editor files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local environment files
+.env
+.env.*
+*.local
+
+# Local tooling
+.codex

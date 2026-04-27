@@ -1,0 +1,15 @@
+services:
+  postgres-auth:
+    image: postgres:18.3
+    container_name: fintrack-postgres-auth
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: auth_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql
+
+volumes:
+  postgres_auth_data:
