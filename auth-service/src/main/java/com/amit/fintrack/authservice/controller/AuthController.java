@@ -1,12 +1,14 @@
 package com.amit.fintrack.authservice.controller;
 
 import com.amit.fintrack.authservice.dto.AuthResponse;
+import com.amit.fintrack.authservice.dto.LoginRequest;
 import com.amit.fintrack.authservice.dto.RegisterRequest;
 import com.amit.fintrack.authservice.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,5 +22,16 @@ public class AuthController {
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         AuthResponse response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        AuthResponse response = authService.login(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<String> me(Authentication authentication) {
+        return ResponseEntity.ok(authentication.getName());
     }
 }
