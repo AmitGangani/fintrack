@@ -1,5 +1,7 @@
 package com.amit.fintrack.authservice.config;
 
+import com.amit.fintrack.authservice.exception.RestAccessDeniedHandler;
+import com.amit.fintrack.authservice.exception.RestAuthenticationEntryPoint;
 import com.amit.fintrack.authservice.repository.UserRepository;
 import com.amit.fintrack.authservice.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+    private final RestAccessDeniedHandler restAccessDeniedHandler;
 
     @Bean
     public UserDetailsService userDetailsService(UserRepository userRepository) {
@@ -62,6 +66,10 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authenticationProvider(authenticationProvider)
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(restAuthenticationEntryPoint)
+                        .accessDeniedHandler(restAccessDeniedHandler)
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth/register",
