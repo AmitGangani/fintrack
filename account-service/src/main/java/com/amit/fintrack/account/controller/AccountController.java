@@ -2,6 +2,7 @@ package com.amit.fintrack.account.controller;
 
 import com.amit.fintrack.account.dto.AccountRequest;
 import com.amit.fintrack.account.dto.AccountResponse;
+import com.amit.fintrack.account.dto.BalanceAdjustmentRequest;
 import com.amit.fintrack.account.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -53,5 +54,18 @@ public class AccountController {
     ) {
         accountService.deleteAccount(accountId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{accountId}/balance")
+    public ResponseEntity<AccountResponse> adjustBalance(
+            @PathVariable UUID accountId,
+            @Valid @RequestBody BalanceAdjustmentRequest request
+    ) {
+        AccountResponse response = accountService.adjustBalance(
+                accountId,
+                request.amountChange()
+        );
+
+        return ResponseEntity.ok(response);
     }
 }

@@ -9,6 +9,7 @@ import com.amit.fintrack.account.security.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -80,6 +81,22 @@ public class AccountService {
                 .orElseThrow(() -> new AccountNotFoundException("Account not found"));
 
         accountRepository.delete(account);
+    }
+
+    public AccountResponse adjustBalance(UUID accountId, BigDecimal amountChange) {
+        UUID currentUserId = currentUserService.getCurrentUserId();
+
+        Account account = accountRepository.findByIdAndUserId(accountId, currentUserId)
+                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
+
+        BigDecimal newBalance = account.getBalance().add(amountChange);
+
+        account.setBalance(newBalance);
+        account.setUpdatedAt(LocalDateTime.now());
+
+        Account updatedAccount = accountRepository.save(account);
+
+        return toResponse(updatedAccount);
     }
 
     private AccountResponse toResponse(Account account) {

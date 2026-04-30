@@ -23,6 +23,19 @@ services:
     volumes:
       - postgres_account_data:/var/lib/postgresql
 
+  postgres-transaction:
+    image: postgres:18.3
+    container_name: fintrack-postgres-transaction
+    environment:
+      POSTGRES_DB: transaction_db
+      POSTGRES_USER: transaction_user
+      POSTGRES_PASSWORD: transaction_password
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_transaction_data:/var/lib/postgresql
+
 volumes:
   postgres_auth_data:
   postgres_account_data:
+  postgres_transaction_data:
