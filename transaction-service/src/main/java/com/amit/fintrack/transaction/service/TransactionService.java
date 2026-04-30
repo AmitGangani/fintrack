@@ -1,16 +1,20 @@
 package com.amit.fintrack.transaction.service;
 
 import com.amit.fintrack.transaction.client.AccountClient;
+import com.amit.fintrack.transaction.dto.MonthlySummaryResponse;
 import com.amit.fintrack.transaction.dto.TransactionRequest;
 import com.amit.fintrack.transaction.dto.TransactionResponse;
 import com.amit.fintrack.transaction.entity.FinancialTransaction;
 import com.amit.fintrack.transaction.entity.TransactionType;
+import com.amit.fintrack.transaction.exception.TransactionNotFoundException;
 import com.amit.fintrack.transaction.repository.TransactionRepository;
 import com.amit.fintrack.transaction.security.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -23,22 +27,12 @@ public class TransactionService {
     private final CurrentUserService currentUserService;
     private final AccountClient accountClient;
 
+    @Transactional
     public TransactionResponse createTransaction(
             TransactionRequest request,
             String authorizationHeader
     ) {
         UUID currentUserId = currentUserService.getCurrentUserId();
-
-        BigDecimal amountChange = calculateAmountChange(
-                request.type(),
-                request.amount()
-        );
-
-        accountClient.adjustAccountBalance(
-                request.accountId(),
-                amountChange,
-                authorizationHeader
-        );
 
         FinancialTransaction transaction = FinancialTransaction.builder()
                 .userId(currentUserId)
@@ -53,6 +47,17 @@ public class TransactionService {
 
         FinancialTransaction savedTransaction = transactionRepository.save(transaction);
 
+        BigDecimal amountChange = calculateAmountChange(
+                request.type(),
+                request.amount()
+        );
+
+        accountClient.adjustAccountBalance(
+                request.accountId(),
+                amountChange,
+                authorizationHeader
+        );
+
         return toResponse(savedTransaction);
     }
 
@@ -63,6 +68,163 @@ public class TransactionService {
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    public TransactionResponse getTransactionById(UUID transactionId) {
+        UUID currentUserId = currentUserService.getCurrentUserId();
+
+        FinancialTransaction transaction = transactionRepository.findByIdAndUserId(
+                        transactionId,
+                        currentUserId
+                )
+                .orElseThrow(() -> new TransactionNotFoundException("Transaction not found"));
+
+        return toResponse(transaction);
+    }
+
+    public List<TransactionResponse> getMonthlyTransactions(int year, int month) {
+        UUID currentUserId = currentUserService.getCurrentUserId();
+
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+
+        return transactionRepository
+                .findByUserIdAndTransactionDateBetweenOrderByTransactionDateDesc(
+                        currentUserId,
+                        startDate,
+                        endDate
+                )
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public MonthlySummaryResponse getMonthlySummary(int year, int month) {
+        UUID currentUserId = currentUserService.getCurrentUserId();
+
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+
+        List<FinancialTransaction> transactions = transactionRepository
+                .findByUserIdAndTransactionDateBetweenOrderByTransactionDateDesc(
+                        currentUserId,
+                        startDate,
+                        endDate
+                );
+
+        BigDecimal totalIncome = transactions.stream()
+                .filter(transaction -> transaction.getType() == TransactionType.INCOME)
+                .map(FinancialTransaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalExpense = transactions.stream()
+                .filter(transaction -> transaction.getType() == TransactionType.EXPENSE)
+                .map(FinancialTransaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal netSavings = totalIncome.subtract(totalExpense);
+
+        return new MonthlySummaryResponse(
+                year,
+                month,
+                totalIncome,
+                totalExpense,
+                netSavings,
+                transactions.size()
+        );
+    }
+
+    @Transactional
+    public TransactionResponse updateTransaction(
+            UUID transactionId,
+            TransactionRequest request,
+            String authorizationHeader
+    ) {
+        UUID currentUserId = currentUserService.getCurrentUserId();
+
+        FinancialTransaction transaction = transactionRepository.findByIdAndUserId(
+                        transactionId,
+                        currentUserId
+                )
+                .orElseThrow(() -> new TransactionNotFoundException("Transaction not found"));
+
+        UUID oldAccountId = transaction.getAccountId();
+        BigDecimal oldAmountChange = calculateAmountChange(
+                transaction.getType(),
+                transaction.getAmount()
+        );
+
+        UUID newAccountId = request.accountId();
+        BigDecimal newAmountChange = calculateAmountChange(
+                request.type(),
+                request.amount()
+        );
+
+        if (oldAccountId.equals(newAccountId)) {
+            BigDecimal balanceDifference = newAmountChange.subtract(oldAmountChange);
+
+            if (balanceDifference.compareTo(BigDecimal.ZERO) != 0) {
+                accountClient.adjustAccountBalance(
+                        oldAccountId,
+                        balanceDifference,
+                        authorizationHeader
+                );
+            }
+        } else {
+            BigDecimal reverseOldTransaction = oldAmountChange.negate();
+
+            accountClient.adjustAccountBalance(
+                    oldAccountId,
+                    reverseOldTransaction,
+                    authorizationHeader
+            );
+
+            accountClient.adjustAccountBalance(
+                    newAccountId,
+                    newAmountChange,
+                    authorizationHeader
+            );
+        }
+
+        transaction.setAccountId(request.accountId());
+        transaction.setType(request.type());
+        transaction.setCategory(request.category());
+        transaction.setAmount(request.amount());
+        transaction.setDescription(request.description());
+        transaction.setTransactionDate(request.transactionDate());
+
+        FinancialTransaction updatedTransaction = transactionRepository.save(transaction);
+
+        return toResponse(updatedTransaction);
+    }
+
+    @Transactional
+    public void deleteTransaction(
+            UUID transactionId,
+            String authorizationHeader
+    ) {
+        UUID currentUserId = currentUserService.getCurrentUserId();
+
+        FinancialTransaction transaction = transactionRepository.findByIdAndUserId(
+                        transactionId,
+                        currentUserId
+                )
+                .orElseThrow(() -> new TransactionNotFoundException("Transaction not found"));
+
+        BigDecimal originalAmountChange = calculateAmountChange(
+                transaction.getType(),
+                transaction.getAmount()
+        );
+
+        BigDecimal reverseAmountChange = originalAmountChange.negate();
+
+        accountClient.adjustAccountBalance(
+                transaction.getAccountId(),
+                reverseAmountChange,
+                authorizationHeader
+        );
+
+        transactionRepository.delete(transaction);
     }
 
     private BigDecimal calculateAmountChange(TransactionType type, BigDecimal amount) {
