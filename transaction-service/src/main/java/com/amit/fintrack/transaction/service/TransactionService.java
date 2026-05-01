@@ -1,6 +1,7 @@
 package com.amit.fintrack.transaction.service;
 
 import com.amit.fintrack.transaction.client.AccountClient;
+import com.amit.fintrack.transaction.dto.CategoryExpenseSummaryResponse;
 import com.amit.fintrack.transaction.dto.MonthlySummaryResponse;
 import com.amit.fintrack.transaction.dto.TransactionRequest;
 import com.amit.fintrack.transaction.dto.TransactionResponse;
@@ -17,7 +18,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -132,6 +135,39 @@ public class TransactionService {
                 netSavings,
                 transactions.size()
         );
+    }
+
+    public List<CategoryExpenseSummaryResponse> getCategoryExpenseSummary(int year, int month) {
+        UUID currentUserId = currentUserService.getCurrentUserId();
+
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+
+        List<FinancialTransaction> transactions = transactionRepository
+                .findByUserIdAndTransactionDateBetweenOrderByTransactionDateDesc(
+                        currentUserId,
+                        startDate,
+                        endDate
+                );
+
+        Map<?, BigDecimal> categoryTotals = transactions.stream()
+                .filter(transaction -> transaction.getType() == TransactionType.EXPENSE)
+                .collect(Collectors.groupingBy(
+                        FinancialTransaction::getCategory,
+                        Collectors.reducing(
+                                BigDecimal.ZERO,
+                                FinancialTransaction::getAmount,
+                                BigDecimal::add
+                        )
+                ));
+
+        return categoryTotals.entrySet()
+                .stream()
+                .map(entry -> new CategoryExpenseSummaryResponse(
+                        (com.amit.fintrack.transaction.entity.TransactionCategory) entry.getKey(),
+                        entry.getValue()
+                ))
+                .toList();
     }
 
     @Transactional

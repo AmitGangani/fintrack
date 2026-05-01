@@ -1,5 +1,6 @@
 package com.amit.fintrack.transaction.controller;
 
+import com.amit.fintrack.transaction.dto.CategoryExpenseSummaryResponse;
 import com.amit.fintrack.transaction.dto.MonthlySummaryResponse;
 import com.amit.fintrack.transaction.dto.TransactionRequest;
 import com.amit.fintrack.transaction.dto.TransactionResponse;
@@ -64,6 +65,16 @@ public class TransactionController {
     ) {
         return ResponseEntity.ok(
                 transactionService.getMonthlySummary(year, month)
+        );
+    }
+
+    @GetMapping("/summary/category")
+    public ResponseEntity<List<CategoryExpenseSummaryResponse>> getCategoryExpenseSummary(
+            @RequestParam int year,
+            @RequestParam int month
+    ) {
+        return ResponseEntity.ok(
+                transactionService.getCategoryExpenseSummary(year, month)
         );
     }
 

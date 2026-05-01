@@ -35,7 +35,20 @@ services:
     volumes:
       - postgres_transaction_data:/var/lib/postgresql
 
+  postgres-budget:
+    image: postgres:18.3
+    container_name: fintrack-postgres-budget
+    environment:
+      POSTGRES_DB: budget_db
+      POSTGRES_USER: budget_user
+      POSTGRES_PASSWORD: budget_password
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_budget_data:/var/lib/postgresql
+
 volumes:
   postgres_auth_data:
   postgres_account_data:
   postgres_transaction_data:
+  postgres_budget_data:
