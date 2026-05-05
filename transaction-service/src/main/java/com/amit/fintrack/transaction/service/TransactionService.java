@@ -7,6 +7,8 @@ import com.amit.fintrack.transaction.dto.TransactionRequest;
 import com.amit.fintrack.transaction.dto.TransactionResponse;
 import com.amit.fintrack.transaction.entity.FinancialTransaction;
 import com.amit.fintrack.transaction.entity.TransactionType;
+import com.amit.fintrack.transaction.event.TransactionCreatedEvent;
+import com.amit.fintrack.transaction.event.TransactionEventProducer;
 import com.amit.fintrack.transaction.exception.TransactionNotFoundException;
 import com.amit.fintrack.transaction.repository.TransactionRepository;
 import com.amit.fintrack.transaction.security.CurrentUserService;
@@ -29,6 +31,7 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final CurrentUserService currentUserService;
     private final AccountClient accountClient;
+    private final TransactionEventProducer transactionEventProducer;
 
     @Transactional
     public TransactionResponse createTransaction(
@@ -60,6 +63,20 @@ public class TransactionService {
                 amountChange,
                 authorizationHeader
         );
+
+        TransactionCreatedEvent event = new TransactionCreatedEvent(
+                UUID.randomUUID(),
+                savedTransaction.getId(),
+                savedTransaction.getUserId(),
+                savedTransaction.getAccountId(),
+                savedTransaction.getType(),
+                savedTransaction.getCategory(),
+                savedTransaction.getAmount(),
+                savedTransaction.getTransactionDate(),
+                LocalDateTime.now()
+        );
+
+        transactionEventProducer.publishTransactionCreated(event);
 
         return toResponse(savedTransaction);
     }
