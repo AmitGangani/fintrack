@@ -7,8 +7,9 @@ import com.amit.fintrack.transaction.dto.TransactionRequest;
 import com.amit.fintrack.transaction.dto.TransactionResponse;
 import com.amit.fintrack.transaction.entity.FinancialTransaction;
 import com.amit.fintrack.transaction.entity.TransactionType;
-import com.amit.fintrack.transaction.event.TransactionCreatedEvent;
+import com.amit.fintrack.transaction.event.TransactionBudgetEvent;
 import com.amit.fintrack.transaction.event.TransactionEventProducer;
+import com.amit.fintrack.transaction.event.TransactionEventType;
 import com.amit.fintrack.transaction.exception.TransactionNotFoundException;
 import com.amit.fintrack.transaction.repository.TransactionRepository;
 import com.amit.fintrack.transaction.security.CurrentUserService;
@@ -64,19 +65,27 @@ public class TransactionService {
                 authorizationHeader
         );
 
-        TransactionCreatedEvent event = new TransactionCreatedEvent(
+        TransactionBudgetEvent event = new TransactionBudgetEvent(
                 UUID.randomUUID(),
+                TransactionEventType.CREATED,
                 savedTransaction.getId(),
                 savedTransaction.getUserId(),
                 savedTransaction.getAccountId(),
+
+                null,
+                null,
+                null,
+                null,
+
                 savedTransaction.getType(),
                 savedTransaction.getCategory(),
                 savedTransaction.getAmount(),
                 savedTransaction.getTransactionDate(),
+
                 LocalDateTime.now()
         );
 
-        transactionEventProducer.publishTransactionCreated(event);
+        transactionEventProducer.publishTransactionBudgetEvent(event);
 
         return toResponse(savedTransaction);
     }
@@ -207,6 +216,11 @@ public class TransactionService {
                 transaction.getAmount()
         );
 
+        TransactionType oldType = transaction.getType();
+        var oldCategory = transaction.getCategory();
+        BigDecimal oldAmount = transaction.getAmount();
+        var oldTransactionDate = transaction.getTransactionDate();
+
         UUID newAccountId = request.accountId();
         BigDecimal newAmountChange = calculateAmountChange(
                 request.type(),
@@ -248,6 +262,28 @@ public class TransactionService {
 
         FinancialTransaction updatedTransaction = transactionRepository.save(transaction);
 
+        TransactionBudgetEvent event = new TransactionBudgetEvent(
+                UUID.randomUUID(),
+                TransactionEventType.UPDATED,
+                updatedTransaction.getId(),
+                updatedTransaction.getUserId(),
+                updatedTransaction.getAccountId(),
+
+                oldType,
+                oldCategory,
+                oldAmount,
+                oldTransactionDate,
+
+                updatedTransaction.getType(),
+                updatedTransaction.getCategory(),
+                updatedTransaction.getAmount(),
+                updatedTransaction.getTransactionDate(),
+
+                LocalDateTime.now()
+        );
+
+        transactionEventProducer.publishTransactionBudgetEvent(event);
+
         return toResponse(updatedTransaction);
     }
 
@@ -276,6 +312,28 @@ public class TransactionService {
                 reverseAmountChange,
                 authorizationHeader
         );
+
+        TransactionBudgetEvent event = new TransactionBudgetEvent(
+                UUID.randomUUID(),
+                TransactionEventType.DELETED,
+                transaction.getId(),
+                transaction.getUserId(),
+                transaction.getAccountId(),
+
+                transaction.getType(),
+                transaction.getCategory(),
+                transaction.getAmount(),
+                transaction.getTransactionDate(),
+
+                null,
+                null,
+                null,
+                null,
+
+                LocalDateTime.now()
+        );
+
+        transactionEventProducer.publishTransactionBudgetEvent(event);
 
         transactionRepository.delete(transaction);
     }

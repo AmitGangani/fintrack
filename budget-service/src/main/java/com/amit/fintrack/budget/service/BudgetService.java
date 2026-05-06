@@ -6,10 +6,12 @@ import com.amit.fintrack.budget.dto.BudgetResponse;
 import com.amit.fintrack.budget.dto.CategoryExpenseSummaryResponse;
 import com.amit.fintrack.budget.entity.Budget;
 import com.amit.fintrack.budget.entity.BudgetCategory;
+import com.amit.fintrack.budget.entity.BudgetSpending;
 import com.amit.fintrack.budget.entity.BudgetStatus;
 import com.amit.fintrack.budget.exception.BudgetNotFoundException;
 import com.amit.fintrack.budget.exception.DuplicateBudgetException;
 import com.amit.fintrack.budget.repository.BudgetRepository;
+import com.amit.fintrack.budget.repository.BudgetSpendingRepository;
 import com.amit.fintrack.budget.security.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,12 +30,9 @@ public class BudgetService {
 
     private final BudgetRepository budgetRepository;
     private final CurrentUserService currentUserService;
-    private final TransactionClient transactionClient;
+    private final BudgetSpendingRepository budgetSpendingRepository;
 
-    public BudgetResponse createBudget(
-            BudgetRequest request,
-            String authorizationHeader
-    ) {
+    public BudgetResponse createBudget(BudgetRequest request) {
         UUID currentUserId = currentUserService.getCurrentUserId();
 
         budgetRepository.findByUserIdAndCategoryAndYearAndMonth(
@@ -58,9 +57,9 @@ public class BudgetService {
         Budget savedBudget = budgetRepository.save(budget);
 
         Map<BudgetCategory, BigDecimal> expenseMap = getExpenseMap(
+                currentUserId,
                 request.year(),
-                request.month(),
-                authorizationHeader
+                request.month()
         );
 
         BigDecimal spentAmount = expenseMap.getOrDefault(
@@ -71,11 +70,7 @@ public class BudgetService {
         return toResponse(savedBudget, spentAmount);
     }
 
-    public List<BudgetResponse> getMonthlyBudgets(
-            int year,
-            int month,
-            String authorizationHeader
-    ) {
+    public List<BudgetResponse> getMonthlyBudgets(int year, int month) {
         UUID currentUserId = currentUserService.getCurrentUserId();
 
         List<Budget> budgets = budgetRepository.findByUserIdAndYearAndMonthOrderByCategoryAsc(
@@ -85,9 +80,9 @@ public class BudgetService {
         );
 
         Map<BudgetCategory, BigDecimal> expenseMap = getExpenseMap(
+                currentUserId,
                 year,
-                month,
-                authorizationHeader
+                month
         );
 
         return budgets.stream()
@@ -99,8 +94,7 @@ public class BudgetService {
     }
 
     public BudgetResponse getBudgetById(
-            UUID budgetId,
-            String authorizationHeader
+            UUID budgetId
     ) {
         UUID currentUserId = currentUserService.getCurrentUserId();
 
@@ -108,9 +102,9 @@ public class BudgetService {
                 .orElseThrow(() -> new BudgetNotFoundException("Budget not found"));
 
         Map<BudgetCategory, BigDecimal> expenseMap = getExpenseMap(
+                currentUserId,
                 budget.getYear(),
-                budget.getMonth(),
-                authorizationHeader
+                budget.getMonth()
         );
 
         BigDecimal spentAmount = expenseMap.getOrDefault(
@@ -123,8 +117,7 @@ public class BudgetService {
 
     public BudgetResponse updateBudget(
             UUID budgetId,
-            BudgetRequest request,
-            String authorizationHeader
+            BudgetRequest request
     ) {
         UUID currentUserId = currentUserService.getCurrentUserId();
 
@@ -151,9 +144,9 @@ public class BudgetService {
         Budget updatedBudget = budgetRepository.save(budget);
 
         Map<BudgetCategory, BigDecimal> expenseMap = getExpenseMap(
+                currentUserId,
                 request.year(),
-                request.month(),
-                authorizationHeader
+                request.month()
         );
 
         BigDecimal spentAmount = expenseMap.getOrDefault(
@@ -174,21 +167,21 @@ public class BudgetService {
     }
 
     private Map<BudgetCategory, BigDecimal> getExpenseMap(
+            UUID userId,
             int year,
-            int month,
-            String authorizationHeader
+            int month
     ) {
-        List<CategoryExpenseSummaryResponse> summaries =
-                transactionClient.getCategoryExpenseSummary(
+        List<BudgetSpending> spendingList =
+                budgetSpendingRepository.findByUserIdAndYearAndMonth(
+                        userId,
                         year,
-                        month,
-                        authorizationHeader
+                        month
                 );
 
-        return summaries.stream()
+        return spendingList.stream()
                 .collect(Collectors.toMap(
-                        CategoryExpenseSummaryResponse::category,
-                        CategoryExpenseSummaryResponse::totalExpense
+                        BudgetSpending::getCategory,
+                        BudgetSpending::getSpentAmount
                 ));
     }
 

@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class TransactionEventProducer {
 
-    private final KafkaTemplate<String, TransactionCreatedEvent> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public void publishTransactionCreated(TransactionCreatedEvent event) {
+    public void publishTransactionBudgetEvent(TransactionBudgetEvent event) {
         kafkaTemplate.send(
                 KafkaTopics.TRANSACTION_EVENTS,
                 event.userId().toString(),

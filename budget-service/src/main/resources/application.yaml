@@ -19,7 +19,7 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.use.type.headers: false
-        spring.json.value.default.type: com.amit.fintrack.budget.event.TransactionCreatedEvent
+        spring.json.value.default.type: com.amit.fintrack.budget.event.TransactionBudgetEvent
         spring.json.trusted.packages: com.amit.fintrack.budget.event
 
   flyway:

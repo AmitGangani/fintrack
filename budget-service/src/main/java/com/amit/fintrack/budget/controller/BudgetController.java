@@ -3,9 +3,9 @@ package com.amit.fintrack.budget.controller;
 import com.amit.fintrack.budget.dto.BudgetRequest;
 import com.amit.fintrack.budget.dto.BudgetResponse;
 import com.amit.fintrack.budget.service.BudgetService;
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,8 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
-
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @RestController
 @RequestMapping("/api/budgets")
@@ -29,14 +27,9 @@ public class BudgetController {
     @Operation(summary = "Create monthly category budget")
     @PostMapping
     public ResponseEntity<BudgetResponse> createBudget(
-            @RequestHeader(AUTHORIZATION) String authorizationHeader,
             @Valid @RequestBody BudgetRequest request
     ) {
-        BudgetResponse response = budgetService.createBudget(
-                request,
-                authorizationHeader
-        );
-
+        BudgetResponse response = budgetService.createBudget(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -44,22 +37,20 @@ public class BudgetController {
     @GetMapping("/monthly")
     public ResponseEntity<List<BudgetResponse>> getMonthlyBudgets(
             @RequestParam int year,
-            @RequestParam int month,
-            @RequestHeader(AUTHORIZATION) String authorizationHeader
+            @RequestParam int month
     ) {
         return ResponseEntity.ok(
-                budgetService.getMonthlyBudgets(year, month, authorizationHeader)
+                budgetService.getMonthlyBudgets(year, month)
         );
     }
 
     @Operation(summary = "Get budget by ID")
     @GetMapping("/{budgetId}")
     public ResponseEntity<BudgetResponse> getBudgetById(
-            @PathVariable UUID budgetId,
-            @RequestHeader(AUTHORIZATION) String authorizationHeader
+            @PathVariable UUID budgetId
     ) {
         return ResponseEntity.ok(
-                budgetService.getBudgetById(budgetId, authorizationHeader)
+                budgetService.getBudgetById(budgetId)
         );
     }
 
@@ -67,13 +58,11 @@ public class BudgetController {
     @PutMapping("/{budgetId}")
     public ResponseEntity<BudgetResponse> updateBudget(
             @PathVariable UUID budgetId,
-            @RequestHeader(AUTHORIZATION) String authorizationHeader,
             @Valid @RequestBody BudgetRequest request
     ) {
         BudgetResponse response = budgetService.updateBudget(
                 budgetId,
-                request,
-                authorizationHeader
+                request
         );
 
         return ResponseEntity.ok(response);
