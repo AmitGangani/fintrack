@@ -6,7 +6,7 @@ import com.amit.fintrack.transaction.dto.TransactionRequest;
 import com.amit.fintrack.transaction.dto.TransactionResponse;
 import com.amit.fintrack.transaction.entity.FinancialTransaction;
 import com.amit.fintrack.transaction.entity.TransactionType;
-import com.amit.fintrack.transaction.event.TransactionBudgetEvent;
+import com.amit.fintrack.transaction.event.TransactionLifecycleEvent;
 import com.amit.fintrack.transaction.event.TransactionEventType;
 import com.amit.fintrack.transaction.exception.TransactionNotFoundException;
 import com.amit.fintrack.transaction.repository.TransactionRepository;
@@ -48,7 +48,7 @@ public class TransactionService {
 
         FinancialTransaction savedTransaction = transactionRepository.save(transaction);
 
-        TransactionBudgetEvent event = new TransactionBudgetEvent(
+        TransactionLifecycleEvent event = new TransactionLifecycleEvent(
                 UUID.randomUUID(),
                 TransactionEventType.CREATED,
                 savedTransaction.getId(),
@@ -70,7 +70,7 @@ public class TransactionService {
                 LocalDateTime.now()
         );
 
-        outboxService.saveTransactionEvent(event);
+        outboxService.saveTransactionLifecycleEvent(event);
 
         return toResponse(savedTransaction);
     }
@@ -220,7 +220,7 @@ public class TransactionService {
 
         FinancialTransaction updatedTransaction = transactionRepository.save(transaction);
 
-        TransactionBudgetEvent event = new TransactionBudgetEvent(
+        TransactionLifecycleEvent event = new TransactionLifecycleEvent(
                 UUID.randomUUID(),
                 TransactionEventType.UPDATED,
                 updatedTransaction.getId(),
@@ -242,7 +242,7 @@ public class TransactionService {
                 LocalDateTime.now()
         );
 
-        outboxService.saveTransactionEvent(event);
+        outboxService.saveTransactionLifecycleEvent(event);
 
         return toResponse(updatedTransaction);
     }
@@ -257,7 +257,7 @@ public class TransactionService {
                 )
                 .orElseThrow(() -> new TransactionNotFoundException("Transaction not found"));
 
-        TransactionBudgetEvent event = new TransactionBudgetEvent(
+        TransactionLifecycleEvent event = new TransactionLifecycleEvent(
                 UUID.randomUUID(),
                 TransactionEventType.DELETED,
                 transaction.getId(),
@@ -279,7 +279,7 @@ public class TransactionService {
                 LocalDateTime.now()
         );
 
-        outboxService.saveTransactionEvent(event);
+        outboxService.saveTransactionLifecycleEvent(event);
 
         transactionRepository.delete(transaction);
     }

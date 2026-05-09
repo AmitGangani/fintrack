@@ -2,7 +2,7 @@ package com.amit.fintrack.transaction.service;
 
 import com.amit.fintrack.transaction.entity.OutboxEvent;
 import com.amit.fintrack.transaction.event.KafkaTopics;
-import com.amit.fintrack.transaction.event.TransactionBudgetEvent;
+import com.amit.fintrack.transaction.event.TransactionLifecycleEvent;
 import com.amit.fintrack.transaction.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ public class OutboxService {
     private final OutboxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
 
-    public void saveTransactionEvent(TransactionBudgetEvent event) {
+    public void saveTransactionLifecycleEvent(TransactionLifecycleEvent event) {
         try {
             String payload = objectMapper.writeValueAsString(event);
 

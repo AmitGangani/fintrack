@@ -1,7 +1,7 @@
 package com.amit.fintrack.account.service;
 
 import com.amit.fintrack.account.entity.ProcessedKafkaEvent;
-import com.amit.fintrack.account.event.TransactionBudgetEvent;
+import com.amit.fintrack.account.event.TransactionLifecycleEvent;
 import com.amit.fintrack.account.event.TransactionEventType;
 import com.amit.fintrack.account.repository.ProcessedKafkaEventRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class AccountBalanceEventService {
     private final ProcessedKafkaEventRepository processedKafkaEventRepository;
 
     @Transactional
-    public void handleTransactionEvent(TransactionBudgetEvent event) {
+    public void handleTransactionEvent(TransactionLifecycleEvent event) {
 
         if (processedKafkaEventRepository.existsById(event.eventId())) {
             log.info("Skipping duplicate account event: {}", event.eventId());
@@ -42,7 +42,7 @@ public class AccountBalanceEventService {
         log.info("Processed account balance event: {}", event.eventId());
     }
 
-    private void applyNewTransaction(TransactionBudgetEvent event) {
+    private void applyNewTransaction(TransactionLifecycleEvent event) {
         if (event.newType() == null || event.newAccountId() == null) {
             return;
         }
@@ -59,7 +59,7 @@ public class AccountBalanceEventService {
         );
     }
 
-    private void reverseOldTransaction(TransactionBudgetEvent event) {
+    private void reverseOldTransaction(TransactionLifecycleEvent event) {
         if (event.oldType() == null || event.oldAccountId() == null) {
             return;
         }
@@ -86,7 +86,7 @@ public class AccountBalanceEventService {
         return amount.negate();
     }
 
-    private void markEventAsProcessed(TransactionBudgetEvent event) {
+    private void markEventAsProcessed(TransactionLifecycleEvent event) {
         ProcessedKafkaEvent processedEvent = ProcessedKafkaEvent.builder()
                 .eventId(event.eventId())
                 .eventType("TRANSACTION_" + event.eventType().name())

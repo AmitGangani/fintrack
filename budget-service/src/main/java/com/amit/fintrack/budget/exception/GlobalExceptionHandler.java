@@ -45,22 +45,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
-    @ExceptionHandler(TransactionServiceException.class)
-    public ResponseEntity<ErrorResponse> handleTransactionServiceError(
-            TransactionServiceException exception,
-            HttpServletRequest request
-    ) {
-        ErrorResponse response = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                exception.getMessage(),
-                request.getRequestURI()
-        );
-
-        return ResponseEntity.badRequest().body(response);
-    }
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationErrors(
             MethodArgumentNotValidException exception,

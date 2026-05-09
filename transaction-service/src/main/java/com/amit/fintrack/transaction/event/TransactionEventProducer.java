@@ -10,7 +10,7 @@ public class TransactionEventProducer {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public void publishTransactionBudgetEvent(TransactionBudgetEvent event) {
+    public void publishTransactionLifecycleEvent(TransactionLifecycleEvent event) {
         kafkaTemplate.send(
                 KafkaTopics.TRANSACTION_EVENTS,
                 event.userId().toString(),

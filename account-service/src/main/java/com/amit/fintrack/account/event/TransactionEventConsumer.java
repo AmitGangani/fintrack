@@ -21,9 +21,9 @@ public class TransactionEventConsumer {
     )
     public void handleTransactionEvent(String payload) {
         try {
-            TransactionBudgetEvent event = objectMapper.readValue(
+            TransactionLifecycleEvent event = objectMapper.readValue(
                     payload,
-                    TransactionBudgetEvent.class
+                    TransactionLifecycleEvent.class
             );
 
             log.info("Account Service received transaction event: {}", event);

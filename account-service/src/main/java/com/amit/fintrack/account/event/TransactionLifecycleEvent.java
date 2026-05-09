@@ -1,13 +1,11 @@
-package com.amit.fintrack.budget.event;
-
-import com.amit.fintrack.budget.entity.BudgetCategory;
+package com.amit.fintrack.account.event;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record TransactionBudgetEvent(
+public record TransactionLifecycleEvent(
         UUID eventId,
         TransactionEventType eventType,
         UUID transactionId,
@@ -17,12 +15,12 @@ public record TransactionBudgetEvent(
         UUID newAccountId,
 
         String oldType,
-        BudgetCategory oldCategory,
+        String oldCategory,
         BigDecimal oldAmount,
         LocalDate oldTransactionDate,
 
         String newType,
-        BudgetCategory newCategory,
+        String newCategory,
         BigDecimal newAmount,
         LocalDate newTransactionDate,
 

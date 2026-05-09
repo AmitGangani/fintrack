@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record TransactionBudgetEvent(
+public record TransactionLifecycleEvent(
         UUID eventId,
         TransactionEventType eventType,
         UUID transactionId,

@@ -147,15 +147,12 @@ services:
       DB_USERNAME: budget_user
       DB_PASSWORD: budget_password
       JWT_SECRET: MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=
-      TRANSACTION_SERVICE_URL: http://transaction-service:8083
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     ports:
       - "8084:8084"
     depends_on:
       postgres-budget:
         condition: service_healthy
-      transaction-service:
-        condition: service_started
       kafka:
         condition: service_started
 

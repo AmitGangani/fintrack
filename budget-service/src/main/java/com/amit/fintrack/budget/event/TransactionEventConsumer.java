@@ -19,18 +19,18 @@ public class TransactionEventConsumer {
             topics = KafkaTopics.TRANSACTION_EVENTS,
             groupId = "budget-service-group"
     )
-    public void handleTransactionBudgetEvent(String payload) {
+    public void handleTransactionLifecycleEvent(String payload) {
         try {
-            TransactionBudgetEvent event = objectMapper.readValue(
+            TransactionLifecycleEvent event = objectMapper.readValue(
                     payload,
-                    TransactionBudgetEvent.class
+                    TransactionLifecycleEvent.class
             );
 
-            log.info("Budget Service received transaction budget event: {}", event);
-            budgetSpendingService.handleTransactionBudgetEvent(event);
+            log.info("Budget Service received transaction lifecycle event: {}", event);
+            budgetSpendingService.handleTransactionLifecycleEvent(event);
 
         } catch (Exception exception) {
-            log.error("Failed to process transaction budget event payload={}", payload, exception);
+            log.error("Failed to process transaction lifecycle event payload={}", payload, exception);
             throw new RuntimeException(exception);
         }
     }

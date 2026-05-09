@@ -3,7 +3,7 @@ package com.amit.fintrack.budget.service;
 import com.amit.fintrack.budget.entity.BudgetCategory;
 import com.amit.fintrack.budget.entity.BudgetSpending;
 import com.amit.fintrack.budget.entity.ProcessedKafkaEvent;
-import com.amit.fintrack.budget.event.TransactionBudgetEvent;
+import com.amit.fintrack.budget.event.TransactionLifecycleEvent;
 import com.amit.fintrack.budget.event.TransactionEventType;
 import com.amit.fintrack.budget.repository.BudgetSpendingRepository;
 import com.amit.fintrack.budget.repository.ProcessedKafkaEventRepository;
@@ -25,7 +25,7 @@ public class BudgetSpendingService {
     private final ProcessedKafkaEventRepository processedKafkaEventRepository;
 
     @Transactional
-    public void handleTransactionBudgetEvent(TransactionBudgetEvent event) {
+    public void handleTransactionLifecycleEvent(TransactionLifecycleEvent event) {
 
         if (processedKafkaEventRepository.existsById(event.eventId())) {
             log.info("Skipping duplicate event: {}", event.eventId());
@@ -43,10 +43,10 @@ public class BudgetSpendingService {
 
         markEventAsProcessed(event);
 
-        log.info("Processed transaction budget event: {}", event.eventId());
+        log.info("Processed transaction lifecycle event: {}", event.eventId());
     }
 
-    private void applyNewExpense(TransactionBudgetEvent event) {
+    private void applyNewExpense(TransactionLifecycleEvent event) {
         if (!"EXPENSE".equals(event.newType())) {
             return;
         }
@@ -59,7 +59,7 @@ public class BudgetSpendingService {
         );
     }
 
-    private void reverseOldExpense(TransactionBudgetEvent event) {
+    private void reverseOldExpense(TransactionLifecycleEvent event) {
         if (!"EXPENSE".equals(event.oldType())) {
             return;
         }
@@ -120,7 +120,7 @@ public class BudgetSpendingService {
         );
     }
 
-    private void markEventAsProcessed(TransactionBudgetEvent event) {
+    private void markEventAsProcessed(TransactionLifecycleEvent event) {
         ProcessedKafkaEvent processedEvent = ProcessedKafkaEvent.builder()
                 .eventId(event.eventId())
                 .eventType("TRANSACTION_" + event.eventType().name())

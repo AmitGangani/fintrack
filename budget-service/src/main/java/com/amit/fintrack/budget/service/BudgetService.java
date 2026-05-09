@@ -1,9 +1,7 @@
 package com.amit.fintrack.budget.service;
 
-import com.amit.fintrack.budget.client.TransactionClient;
 import com.amit.fintrack.budget.dto.BudgetRequest;
 import com.amit.fintrack.budget.dto.BudgetResponse;
-import com.amit.fintrack.budget.dto.CategoryExpenseSummaryResponse;
 import com.amit.fintrack.budget.entity.Budget;
 import com.amit.fintrack.budget.entity.BudgetCategory;
 import com.amit.fintrack.budget.entity.BudgetSpending;

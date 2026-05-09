@@ -29,22 +29,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-    @ExceptionHandler(AccountServiceException.class)
-    public ResponseEntity<ErrorResponse> handleAccountServiceException(
-            AccountServiceException exception,
-            HttpServletRequest request
-    ) {
-        ErrorResponse response = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                exception.getMessage(),
-                request.getRequestURI()
-        );
-
-        return ResponseEntity.badRequest().body(response);
-    }
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationErrors(
             MethodArgumentNotValidException exception,
