@@ -165,6 +165,7 @@ services:
       ACCOUNT_SERVICE_URL: http://account-service:8082
       TRANSACTION_SERVICE_URL: http://transaction-service:8083
       BUDGET_SERVICE_URL: http://budget-service:8084
+      JWT_SECRET: MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=
     ports:
       - "8080:8080"
     depends_on:
