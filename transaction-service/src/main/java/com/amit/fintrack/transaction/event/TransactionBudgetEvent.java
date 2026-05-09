@@ -13,7 +13,9 @@ public record TransactionBudgetEvent(
         TransactionEventType eventType,
         UUID transactionId,
         UUID userId,
-        UUID accountId,
+
+        UUID oldAccountId,
+        UUID newAccountId,
 
         TransactionType oldType,
         TransactionCategory oldCategory,

@@ -1,6 +1,6 @@
-package com.amit.fintrack.budget.event;
+package com.amit.fintrack.account.event;
 
-import com.amit.fintrack.budget.service.BudgetSpendingService;
+import com.amit.fintrack.account.service.AccountBalanceEventService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -12,25 +12,26 @@ import tools.jackson.databind.ObjectMapper;
 @Slf4j
 public class TransactionEventConsumer {
 
-    private final BudgetSpendingService budgetSpendingService;
+    private final AccountBalanceEventService accountBalanceEventService;
     private final ObjectMapper objectMapper;
 
     @KafkaListener(
             topics = KafkaTopics.TRANSACTION_EVENTS,
-            groupId = "budget-service-group"
+            groupId = "account-service-group"
     )
-    public void handleTransactionBudgetEvent(String payload) {
+    public void handleTransactionEvent(String payload) {
         try {
             TransactionBudgetEvent event = objectMapper.readValue(
                     payload,
                     TransactionBudgetEvent.class
             );
 
-            log.info("Budget Service received transaction budget event: {}", event);
-            budgetSpendingService.handleTransactionBudgetEvent(event);
+            log.info("Account Service received transaction event: {}", event);
+
+            accountBalanceEventService.handleTransactionEvent(event);
 
         } catch (Exception exception) {
-            log.error("Failed to process transaction budget event payload={}", payload, exception);
+            log.error("Failed to process account transaction event payload={}", payload, exception);
             throw new RuntimeException(exception);
         }
     }

@@ -17,8 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-
 @RestController
 @RequestMapping("/api/transactions")
 @RequiredArgsConstructor
@@ -31,14 +29,9 @@ public class TransactionController {
     @Operation(summary = "Create income or expense transaction")
     @PostMapping
     public ResponseEntity<TransactionResponse> createTransaction(
-            @RequestHeader(AUTHORIZATION) String authorizationHeader,
             @Valid @RequestBody TransactionRequest request
     ) {
-        TransactionResponse response = transactionService.createTransaction(
-                request,
-                authorizationHeader
-        );
-
+        TransactionResponse response = transactionService.createTransaction(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -92,13 +85,11 @@ public class TransactionController {
     @PutMapping("/{transactionId}")
     public ResponseEntity<TransactionResponse> updateTransaction(
             @PathVariable UUID transactionId,
-            @RequestHeader(AUTHORIZATION) String authorizationHeader,
             @Valid @RequestBody TransactionRequest request
     ) {
         TransactionResponse response = transactionService.updateTransaction(
                 transactionId,
-                request,
-                authorizationHeader
+                request
         );
 
         return ResponseEntity.ok(response);
@@ -107,10 +98,9 @@ public class TransactionController {
     @Operation(summary = "Delete transaction")
     @DeleteMapping("/{transactionId}")
     public ResponseEntity<Void> deleteTransaction(
-            @PathVariable UUID transactionId,
-            @RequestHeader(AUTHORIZATION) String authorizationHeader
+            @PathVariable UUID transactionId
     ) {
-        transactionService.deleteTransaction(transactionId, authorizationHeader);
+        transactionService.deleteTransaction(transactionId);
         return ResponseEntity.noContent().build();
     }
 }

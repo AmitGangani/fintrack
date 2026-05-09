@@ -99,6 +99,22 @@ public class AccountService {
         return toResponse(updatedAccount);
     }
 
+    public void adjustBalanceFromEvent(
+            UUID accountId,
+            UUID userId,
+            BigDecimal amountChange
+    ) {
+        Account account = accountRepository.findByIdAndUserId(accountId, userId)
+                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
+
+        BigDecimal newBalance = account.getBalance().add(amountChange);
+
+        account.setBalance(newBalance);
+        account.setUpdatedAt(LocalDateTime.now());
+
+        accountRepository.save(account);
+    }
+
     private AccountResponse toResponse(Account account) {
         return new AccountResponse(
                 account.getId(),

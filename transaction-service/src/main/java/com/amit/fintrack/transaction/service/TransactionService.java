@@ -1,6 +1,5 @@
 package com.amit.fintrack.transaction.service;
 
-import com.amit.fintrack.transaction.client.AccountClient;
 import com.amit.fintrack.transaction.dto.CategoryExpenseSummaryResponse;
 import com.amit.fintrack.transaction.dto.MonthlySummaryResponse;
 import com.amit.fintrack.transaction.dto.TransactionRequest;
@@ -8,7 +7,6 @@ import com.amit.fintrack.transaction.dto.TransactionResponse;
 import com.amit.fintrack.transaction.entity.FinancialTransaction;
 import com.amit.fintrack.transaction.entity.TransactionType;
 import com.amit.fintrack.transaction.event.TransactionBudgetEvent;
-import com.amit.fintrack.transaction.event.TransactionEventProducer;
 import com.amit.fintrack.transaction.event.TransactionEventType;
 import com.amit.fintrack.transaction.exception.TransactionNotFoundException;
 import com.amit.fintrack.transaction.repository.TransactionRepository;
@@ -31,14 +29,10 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final CurrentUserService currentUserService;
-    private final AccountClient accountClient;
-    private final TransactionEventProducer transactionEventProducer;
+    private final OutboxService outboxService;
 
     @Transactional
-    public TransactionResponse createTransaction(
-            TransactionRequest request,
-            String authorizationHeader
-    ) {
+    public TransactionResponse createTransaction(TransactionRequest request) {
         UUID currentUserId = currentUserService.getCurrentUserId();
 
         FinancialTransaction transaction = FinancialTransaction.builder()
@@ -54,22 +48,13 @@ public class TransactionService {
 
         FinancialTransaction savedTransaction = transactionRepository.save(transaction);
 
-        BigDecimal amountChange = calculateAmountChange(
-                request.type(),
-                request.amount()
-        );
-
-        accountClient.adjustAccountBalance(
-                request.accountId(),
-                amountChange,
-                authorizationHeader
-        );
-
         TransactionBudgetEvent event = new TransactionBudgetEvent(
                 UUID.randomUUID(),
                 TransactionEventType.CREATED,
                 savedTransaction.getId(),
                 savedTransaction.getUserId(),
+
+                null,
                 savedTransaction.getAccountId(),
 
                 null,
@@ -85,7 +70,7 @@ public class TransactionService {
                 LocalDateTime.now()
         );
 
-        transactionEventProducer.publishTransactionBudgetEvent(event);
+        outboxService.saveTransactionEvent(event);
 
         return toResponse(savedTransaction);
     }
@@ -199,8 +184,7 @@ public class TransactionService {
     @Transactional
     public TransactionResponse updateTransaction(
             UUID transactionId,
-            TransactionRequest request,
-            String authorizationHeader
+            TransactionRequest request
     ) {
         UUID currentUserId = currentUserService.getCurrentUserId();
 
@@ -227,32 +211,6 @@ public class TransactionService {
                 request.amount()
         );
 
-        if (oldAccountId.equals(newAccountId)) {
-            BigDecimal balanceDifference = newAmountChange.subtract(oldAmountChange);
-
-            if (balanceDifference.compareTo(BigDecimal.ZERO) != 0) {
-                accountClient.adjustAccountBalance(
-                        oldAccountId,
-                        balanceDifference,
-                        authorizationHeader
-                );
-            }
-        } else {
-            BigDecimal reverseOldTransaction = oldAmountChange.negate();
-
-            accountClient.adjustAccountBalance(
-                    oldAccountId,
-                    reverseOldTransaction,
-                    authorizationHeader
-            );
-
-            accountClient.adjustAccountBalance(
-                    newAccountId,
-                    newAmountChange,
-                    authorizationHeader
-            );
-        }
-
         transaction.setAccountId(request.accountId());
         transaction.setType(request.type());
         transaction.setCategory(request.category());
@@ -267,6 +225,8 @@ public class TransactionService {
                 TransactionEventType.UPDATED,
                 updatedTransaction.getId(),
                 updatedTransaction.getUserId(),
+
+                oldAccountId,
                 updatedTransaction.getAccountId(),
 
                 oldType,
@@ -282,16 +242,13 @@ public class TransactionService {
                 LocalDateTime.now()
         );
 
-        transactionEventProducer.publishTransactionBudgetEvent(event);
+        outboxService.saveTransactionEvent(event);
 
         return toResponse(updatedTransaction);
     }
 
     @Transactional
-    public void deleteTransaction(
-            UUID transactionId,
-            String authorizationHeader
-    ) {
+    public void deleteTransaction(UUID transactionId) {
         UUID currentUserId = currentUserService.getCurrentUserId();
 
         FinancialTransaction transaction = transactionRepository.findByIdAndUserId(
@@ -300,25 +257,14 @@ public class TransactionService {
                 )
                 .orElseThrow(() -> new TransactionNotFoundException("Transaction not found"));
 
-        BigDecimal originalAmountChange = calculateAmountChange(
-                transaction.getType(),
-                transaction.getAmount()
-        );
-
-        BigDecimal reverseAmountChange = originalAmountChange.negate();
-
-        accountClient.adjustAccountBalance(
-                transaction.getAccountId(),
-                reverseAmountChange,
-                authorizationHeader
-        );
-
         TransactionBudgetEvent event = new TransactionBudgetEvent(
                 UUID.randomUUID(),
                 TransactionEventType.DELETED,
                 transaction.getId(),
                 transaction.getUserId(),
+
                 transaction.getAccountId(),
+                null,
 
                 transaction.getType(),
                 transaction.getCategory(),
@@ -333,7 +279,7 @@ public class TransactionService {
                 LocalDateTime.now()
         );
 
-        transactionEventProducer.publishTransactionBudgetEvent(event);
+        outboxService.saveTransactionEvent(event);
 
         transactionRepository.delete(transaction);
     }
