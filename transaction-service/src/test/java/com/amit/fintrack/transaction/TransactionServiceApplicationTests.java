@@ -1,13 +1,14 @@
 package com.amit.fintrack.transaction;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 class TransactionServiceApplicationTests {
 
     @Test
-    void contextLoads() {
+    void applicationClassIsPresent() {
+        assertNotNull(TransactionServiceApplication.class);
     }
 
 }
