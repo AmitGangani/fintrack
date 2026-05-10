@@ -1,27 +1,22 @@
 server:
-  port: 8084
+  port: 8085
 
 spring:
   application:
-    name: budget-service
+    name: notification-service
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5436/budget_db}
-    username: ${DB_USERNAME:budget_user}
-    password: ${DB_PASSWORD:budget_password}
+    url: ${DB_URL:jdbc:postgresql://localhost:5437/notification_db}
+    username: ${DB_USERNAME:notification_user}
+    password: ${DB_PASSWORD:notification_password}
 
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-
     consumer:
-      group-id: budget-service-group
+      group-id: notification-service-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
   flyway:
     enabled: true
@@ -43,3 +38,9 @@ management:
 
 jwt:
   secret: ${JWT_SECRET:MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

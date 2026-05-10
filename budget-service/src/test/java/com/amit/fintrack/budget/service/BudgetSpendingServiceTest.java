@@ -3,8 +3,11 @@ package com.amit.fintrack.budget.service;
 import com.amit.fintrack.budget.entity.BudgetCategory;
 import com.amit.fintrack.budget.entity.BudgetSpending;
 import com.amit.fintrack.budget.entity.ProcessedKafkaEvent;
+import com.amit.fintrack.budget.event.BudgetAlertProducer;
 import com.amit.fintrack.budget.event.TransactionEventType;
 import com.amit.fintrack.budget.event.TransactionLifecycleEvent;
+import com.amit.fintrack.budget.repository.BudgetAlertHistoryRepository;
+import com.amit.fintrack.budget.repository.BudgetRepository;
 import com.amit.fintrack.budget.repository.BudgetSpendingRepository;
 import com.amit.fintrack.budget.repository.ProcessedKafkaEventRepository;
 import org.junit.jupiter.api.Test;
@@ -33,10 +36,7 @@ class BudgetSpendingServiceTest {
     void createdExpenseCreatesMonthlySpendingAndMarksEventProcessed() {
         FakeBudgetSpendingRepository spendingRepository = new FakeBudgetSpendingRepository();
         FakeProcessedKafkaEventRepository eventRepository = new FakeProcessedKafkaEventRepository();
-        BudgetSpendingService service = new BudgetSpendingService(
-                spendingRepository.repository(),
-                eventRepository.repository()
-        );
+        BudgetSpendingService service = service(spendingRepository, eventRepository);
 
         service.handleTransactionLifecycleEvent(createdExpenseEvent());
 
@@ -54,10 +54,7 @@ class BudgetSpendingServiceTest {
         FakeBudgetSpendingRepository spendingRepository = new FakeBudgetSpendingRepository();
         FakeProcessedKafkaEventRepository eventRepository = new FakeProcessedKafkaEventRepository();
         eventRepository.exists = true;
-        BudgetSpendingService service = new BudgetSpendingService(
-                spendingRepository.repository(),
-                eventRepository.repository()
-        );
+        BudgetSpendingService service = service(spendingRepository, eventRepository);
 
         service.handleTransactionLifecycleEvent(createdExpenseEvent());
 
@@ -77,10 +74,7 @@ class BudgetSpendingServiceTest {
                 spending(BudgetCategory.TRANSPORT, new BigDecimal("10.00"))
         );
         FakeProcessedKafkaEventRepository eventRepository = new FakeProcessedKafkaEventRepository();
-        BudgetSpendingService service = new BudgetSpendingService(
-                spendingRepository.repository(),
-                eventRepository.repository()
-        );
+        BudgetSpendingService service = service(spendingRepository, eventRepository);
 
         service.handleTransactionLifecycleEvent(updatedExpenseEvent());
 
@@ -97,10 +91,7 @@ class BudgetSpendingServiceTest {
                 spending(BudgetCategory.FOOD, new BigDecimal("10.00"))
         );
         FakeProcessedKafkaEventRepository eventRepository = new FakeProcessedKafkaEventRepository();
-        BudgetSpendingService service = new BudgetSpendingService(
-                spendingRepository.repository(),
-                eventRepository.repository()
-        );
+        BudgetSpendingService service = service(spendingRepository, eventRepository);
 
         service.handleTransactionLifecycleEvent(deletedExpenseEvent());
 
@@ -179,6 +170,19 @@ class BudgetSpendingServiceTest {
                 .build();
     }
 
+    private static BudgetSpendingService service(
+            FakeBudgetSpendingRepository spendingRepository,
+            FakeProcessedKafkaEventRepository eventRepository
+    ) {
+        return new BudgetSpendingService(
+                spendingRepository.repository(),
+                eventRepository.repository(),
+                FakeBudgetRepository.repository(),
+                FakeBudgetAlertHistoryRepository.repository(),
+                new BudgetAlertProducer(null, null)
+        );
+    }
+
     private static final class FakeBudgetSpendingRepository {
         private BudgetSpending savedSpending;
         private final List<BudgetSpending> savedSpendings = new ArrayList<>();
@@ -222,6 +226,33 @@ class BudgetSpendingServiceTest {
                             yield savedEvent;
                         }
                         case "toString" -> "FakeProcessedKafkaEventRepository";
+                        default -> throw new UnsupportedOperationException(method.getName());
+                    }
+            );
+        }
+    }
+
+    private static final class FakeBudgetRepository {
+        private static BudgetRepository repository() {
+            return (BudgetRepository) Proxy.newProxyInstance(
+                    BudgetRepository.class.getClassLoader(),
+                    new Class<?>[]{BudgetRepository.class},
+                    (proxy, method, args) -> switch (method.getName()) {
+                        case "findByUserIdAndCategoryAndYearAndMonth" -> Optional.empty();
+                        case "toString" -> "FakeBudgetRepository";
+                        default -> throw new UnsupportedOperationException(method.getName());
+                    }
+            );
+        }
+    }
+
+    private static final class FakeBudgetAlertHistoryRepository {
+        private static BudgetAlertHistoryRepository repository() {
+            return (BudgetAlertHistoryRepository) Proxy.newProxyInstance(
+                    BudgetAlertHistoryRepository.class.getClassLoader(),
+                    new Class<?>[]{BudgetAlertHistoryRepository.class},
+                    (proxy, method, args) -> switch (method.getName()) {
+                        case "toString" -> "FakeBudgetAlertHistoryRepository";
                         default -> throw new UnsupportedOperationException(method.getName());
                     }
             );
