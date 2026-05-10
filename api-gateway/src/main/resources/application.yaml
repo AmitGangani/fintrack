@@ -1,45 +1,11 @@
-server:
-  port: 8080
-
 spring:
   application:
     name: api-gateway
 
-  cloud:
-    gateway:
-      server:
-        webmvc:
-          routes:
-            - id: auth-service-route
-              uri: ${AUTH_SERVICE_URL:http://localhost:8081}
-              predicates:
-                - Path=/api/auth/**
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
 
-            - id: account-service-route
-              uri: ${ACCOUNT_SERVICE_URL:http://localhost:8082}
-              predicates:
-                - Path=/api/accounts/**
-
-            - id: transaction-service-route
-              uri: ${TRANSACTION_SERVICE_URL:http://localhost:8083}
-              predicates:
-                - Path=/api/transactions/**
-
-            - id: budget-service-route
-              uri: ${BUDGET_SERVICE_URL:http://localhost:8084}
-              predicates:
-                - Path=/api/budgets/**
-
-            - id: notification-service-route
-              uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8085}
-              predicates:
-                - Path=/api/notifications/**
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-
-jwt:
-  secret: ${JWT_SECRET:MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=}
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka}

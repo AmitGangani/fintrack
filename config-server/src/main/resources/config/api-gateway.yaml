@@ -1,0 +1,49 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            - id: auth-service-route
+              uri: lb://auth-service
+              predicates:
+                - Path=/api/auth/**
+
+            - id: account-service-route
+              uri: lb://account-service
+              predicates:
+                - Path=/api/accounts/**
+
+            - id: transaction-service-route
+              uri: lb://transaction-service
+              predicates:
+                - Path=/api/transactions/**
+
+            - id: budget-service-route
+              uri: lb://budget-service
+              predicates:
+                - Path=/api/budgets/**
+
+            - id: notification-service-route
+              uri: lb://notification-service
+              predicates:
+                - Path=/api/notifications/**
+
+jwt:
+  secret: ${JWT_SECRET:MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: true
