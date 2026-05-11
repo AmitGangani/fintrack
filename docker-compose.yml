@@ -134,6 +134,23 @@ services:
       timeout: 5s
       retries: 5
 
+  postgres-analytics:
+    image: postgres:18.3
+    container_name: fintrack-postgres-analytics
+    environment:
+      POSTGRES_DB: analytics_db
+      POSTGRES_USER: analytics_user
+      POSTGRES_PASSWORD: analytics_password
+    ports:
+      - "5438:5432"
+    volumes:
+      - postgres_analytics_data:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U analytics_user -d analytics_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   auth-service:
     build:
       context: ./auth-service
@@ -187,6 +204,36 @@ services:
         condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8082/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  analytics-service:
+    build:
+      context: ./analytics-service
+    container_name: fintrack-analytics-service
+    environment:
+      CONFIG_SERVER_URL: http://config-server:8888
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka
+      DB_URL: jdbc:postgresql://postgres-analytics:5432/analytics_db
+      DB_USERNAME: analytics_user
+      DB_PASSWORD: analytics_password
+      JWT_SECRET: MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "8086:8086"
+    depends_on:
+      postgres-analytics:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8086/actuator/health || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -301,6 +348,8 @@ services:
         condition: service_healthy
       account-service:
         condition: service_healthy
+      analytics-service:
+        condition: service_healthy
       transaction-service:
         condition: service_healthy
       budget-service:
@@ -317,6 +366,7 @@ services:
 volumes:
   postgres_auth_data:
   postgres_account_data:
+  postgres_analytics_data:
   postgres_transaction_data:
   postgres_budget_data:
   postgres_notification_data:
