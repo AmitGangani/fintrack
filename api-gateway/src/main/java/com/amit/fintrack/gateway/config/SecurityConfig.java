@@ -2,6 +2,7 @@ package com.amit.fintrack.gateway.config;
 
 import com.amit.fintrack.gateway.exception.RestAuthenticationEntryPoint;
 import com.amit.fintrack.gateway.security.GatewayJwtAuthenticationFilter;
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,13 +30,19 @@ public class SecurityConfig {
                         exception.authenticationEntryPoint(restAuthenticationEntryPoint)
                 )
                 .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(
+                                DispatcherType.ERROR,
+                                DispatcherType.FORWARD
+                        ).permitAll()
                         .requestMatchers(
                                 "/api/auth/register",
                                 "/api/auth/login",
                                 "/actuator/health",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/fallback/**",
+                                "/error"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
