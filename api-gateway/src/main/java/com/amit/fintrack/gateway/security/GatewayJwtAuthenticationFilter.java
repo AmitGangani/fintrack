@@ -1,6 +1,7 @@
 package com.amit.fintrack.gateway.security;
 
 import io.jsonwebtoken.JwtException;
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,11 +26,15 @@ public class GatewayJwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
 
-        return path.equals("/api/auth/register")
+        return request.getDispatcherType() == DispatcherType.ERROR
+                || request.getDispatcherType() == DispatcherType.FORWARD
+                || path.equals("/api/auth/register")
                 || path.equals("/api/auth/login")
                 || path.equals("/actuator/health")
                 || path.startsWith("/swagger-ui")
-                || path.startsWith("/v3/api-docs");
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/fallback/")
+                || path.equals("/error");
     }
 
     @Override

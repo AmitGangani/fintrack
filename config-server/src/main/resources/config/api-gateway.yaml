@@ -11,31 +11,61 @@ spring:
               uri: lb://auth-service
               predicates:
                 - Path=/api/auth/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    id: authServiceCircuitBreaker
+                    fallbackUri: forward:/fallback/auth-service
 
             - id: account-service-route
               uri: lb://account-service
               predicates:
                 - Path=/api/accounts/**
-
-            - id: analytics-service-route
-              uri: lb://analytics-service
-              predicates:
-                - Path=/api/analytics/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    id: accountServiceCircuitBreaker
+                    fallbackUri: forward:/fallback/account-service
 
             - id: transaction-service-route
               uri: lb://transaction-service
               predicates:
                 - Path=/api/transactions/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    id: transactionServiceCircuitBreaker
+                    fallbackUri: forward:/fallback/transaction-service
 
             - id: budget-service-route
               uri: lb://budget-service
               predicates:
                 - Path=/api/budgets/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    id: budgetServiceCircuitBreaker
+                    fallbackUri: forward:/fallback/budget-service
 
             - id: notification-service-route
               uri: lb://notification-service
               predicates:
                 - Path=/api/notifications/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    id: notificationServiceCircuitBreaker
+                    fallbackUri: forward:/fallback/notification-service
+
+            - id: analytics-service-route
+              uri: lb://analytics-service
+              predicates:
+                - Path=/api/analytics/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    id: analyticsServiceCircuitBreaker
+                    fallbackUri: forward:/fallback/analytics-service
 
 jwt:
   secret: ${JWT_SECRET:MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=}
@@ -52,3 +82,48 @@ eureka:
       defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka}
   instance:
     prefer-ip-address: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      authServiceCircuitBreaker:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+
+      accountServiceCircuitBreaker:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+
+      transactionServiceCircuitBreaker:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+
+      budgetServiceCircuitBreaker:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+
+      notificationServiceCircuitBreaker:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+
+      analyticsServiceCircuitBreaker:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
