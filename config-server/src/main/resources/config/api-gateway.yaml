@@ -68,7 +68,9 @@ spring:
                     fallbackUri: forward:/fallback/analytics-service
 
 jwt:
-  secret: ${JWT_SECRET:MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=}
+  secret: ${JWT_SECRET}
+  issuer: ${JWT_ISSUER:fintrack-auth-service}
+  audience: ${JWT_AUDIENCE:fintrack-api}
 
 management:
   endpoints:

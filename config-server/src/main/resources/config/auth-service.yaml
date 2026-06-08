@@ -20,7 +20,9 @@ spring:
         format_sql: true
 
 jwt:
-  secret: ${JWT_SECRET:MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=}
+  secret: ${JWT_SECRET}
+  issuer: ${JWT_ISSUER:fintrack-auth-service}
+  audience: ${JWT_AUDIENCE:fintrack-api}
   expiration-ms: ${JWT_EXPIRATION_MS:86400000}
 
 management:

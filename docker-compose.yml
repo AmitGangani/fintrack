@@ -161,8 +161,10 @@ services:
       DB_URL: jdbc:postgresql://postgres-auth:5432/auth_db
       DB_USERNAME: auth_user
       DB_PASSWORD: auth_password
-      JWT_SECRET: MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=
-      JWT_EXPIRATION_MS: 86400000
+      JWT_SECRET: "${JWT_SECRET:?Set JWT_SECRET to a Base64-encoded 256-bit key}"
+      JWT_ISSUER: "${JWT_ISSUER:-fintrack-auth-service}"
+      JWT_AUDIENCE: "${JWT_AUDIENCE:-fintrack-api}"
+      JWT_EXPIRATION_MS: "${JWT_EXPIRATION_MS:-86400000}"
     ports:
       - "8081:8081"
     depends_on:
@@ -191,7 +193,9 @@ services:
       DB_URL: jdbc:postgresql://postgres-account:5432/account_db
       DB_USERNAME: account_user
       DB_PASSWORD: account_password
-      JWT_SECRET: MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=
+      JWT_SECRET: "${JWT_SECRET:?Set JWT_SECRET to a Base64-encoded 256-bit key}"
+      JWT_ISSUER: "${JWT_ISSUER:-fintrack-auth-service}"
+      JWT_AUDIENCE: "${JWT_AUDIENCE:-fintrack-api}"
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
       postgres-account:
@@ -219,7 +223,9 @@ services:
       DB_URL: jdbc:postgresql://postgres-analytics:5432/analytics_db
       DB_USERNAME: analytics_user
       DB_PASSWORD: analytics_password
-      JWT_SECRET: MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=
+      JWT_SECRET: "${JWT_SECRET:?Set JWT_SECRET to a Base64-encoded 256-bit key}"
+      JWT_ISSUER: "${JWT_ISSUER:-fintrack-auth-service}"
+      JWT_AUDIENCE: "${JWT_AUDIENCE:-fintrack-api}"
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     ports:
       - "8086:8086"
@@ -251,7 +257,9 @@ services:
       DB_URL: jdbc:postgresql://postgres-transaction:5432/transaction_db
       DB_USERNAME: transaction_user
       DB_PASSWORD: transaction_password
-      JWT_SECRET: MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=
+      JWT_SECRET: "${JWT_SECRET:?Set JWT_SECRET to a Base64-encoded 256-bit key}"
+      JWT_ISSUER: "${JWT_ISSUER:-fintrack-auth-service}"
+      JWT_AUDIENCE: "${JWT_AUDIENCE:-fintrack-api}"
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
       postgres-transaction:
@@ -281,7 +289,9 @@ services:
       DB_URL: jdbc:postgresql://postgres-budget:5432/budget_db
       DB_USERNAME: budget_user
       DB_PASSWORD: budget_password
-      JWT_SECRET: MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=
+      JWT_SECRET: "${JWT_SECRET:?Set JWT_SECRET to a Base64-encoded 256-bit key}"
+      JWT_ISSUER: "${JWT_ISSUER:-fintrack-auth-service}"
+      JWT_AUDIENCE: "${JWT_AUDIENCE:-fintrack-api}"
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
       postgres-budget:
@@ -311,7 +321,9 @@ services:
       DB_URL: jdbc:postgresql://postgres-notification:5432/notification_db
       DB_USERNAME: notification_user
       DB_PASSWORD: notification_password
-      JWT_SECRET: MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=
+      JWT_SECRET: "${JWT_SECRET:?Set JWT_SECRET to a Base64-encoded 256-bit key}"
+      JWT_ISSUER: "${JWT_ISSUER:-fintrack-auth-service}"
+      JWT_AUDIENCE: "${JWT_AUDIENCE:-fintrack-api}"
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
       postgres-notification:
@@ -336,7 +348,9 @@ services:
     environment:
       CONFIG_SERVER_URL: http://config-server:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka
-      JWT_SECRET: MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY=
+      JWT_SECRET: "${JWT_SECRET:?Set JWT_SECRET to a Base64-encoded 256-bit key}"
+      JWT_ISSUER: "${JWT_ISSUER:-fintrack-auth-service}"
+      JWT_AUDIENCE: "${JWT_AUDIENCE:-fintrack-api}"
     ports:
       - "8080:8080"
     depends_on:
