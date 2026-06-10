@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5435/transaction_db}
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/transaction_db}
     username: ${DB_USERNAME:transaction_user}
     password: ${DB_PASSWORD:transaction_password}
 

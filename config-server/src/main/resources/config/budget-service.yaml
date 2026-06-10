@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5436/budget_db}
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/budget_db}
     username: ${DB_USERNAME:budget_user}
     password: ${DB_PASSWORD:budget_password}
 

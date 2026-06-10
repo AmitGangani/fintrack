@@ -1,5 +1,7 @@
 package com.amit.fintrack.transaction.security;
 
+import com.amit.fintrack.transaction.application.port.CurrentUserProvider;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -8,7 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.UUID;
 
 @Service
-public class CurrentUserService {
+public class CurrentUserService implements CurrentUserProvider {
 
     public UUID getCurrentUserId() {
         return UUID.fromString(currentJwt().getClaimAsString("userId"));

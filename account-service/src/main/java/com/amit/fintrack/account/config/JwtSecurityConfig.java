@@ -12,20 +12,15 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
-import java.util.Set;
 import java.util.UUID;
 
 @Configuration
 public class JwtSecurityConfig {
-
-    private static final Set<String> ALLOWED_ROLES = Set.of("USER", "ADMIN");
 
     @Bean
     public JwtDecoder jwtDecoder(
@@ -42,22 +37,10 @@ public class JwtSecurityConfig {
                 JwtValidators.createDefaultWithIssuer(requireText(issuer, "jwt.issuer")),
                 audienceValidator(requireText(audience, "jwt.audience")),
                 subjectValidator(),
-                userIdValidator(),
-                roleValidator()
+                userIdValidator()
         ));
 
         return jwtDecoder;
-    }
-
-    @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        authoritiesConverter.setAuthoritiesClaimName("role");
-        authoritiesConverter.setAuthorityPrefix("ROLE_");
-
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
-        return converter;
     }
 
     private SecretKey jwtSecretKey(String jwtSecret) {
@@ -93,12 +76,6 @@ public class JwtSecurityConfig {
         return jwt -> isUuid(jwt.getClaimAsString("userId"))
                 ? OAuth2TokenValidatorResult.success()
                 : invalid("JWT userId must be a UUID");
-    }
-
-    private OAuth2TokenValidator<Jwt> roleValidator() {
-        return jwt -> ALLOWED_ROLES.contains(jwt.getClaimAsString("role"))
-                ? OAuth2TokenValidatorResult.success()
-                : invalid("JWT role is invalid");
     }
 
     private OAuth2TokenValidatorResult invalid(String message) {

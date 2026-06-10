@@ -1,0 +1,54 @@
+package com.amit.fintrack.budget.persistence.entity;
+
+import com.amit.fintrack.budget.domain.BudgetCategory;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Entity
+@Table(
+        name = "budgets",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_budget_user_category_month_year",
+                        columnNames = {"user_id", "category", "month", "year"}
+                )
+        }
+)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Budget {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private BudgetCategory category;
+
+    @Column(nullable = false)
+    private int month;
+
+    @Column(nullable = false)
+    private int year;
+
+    @Column(nullable = false, precision = 19, scale = 2)
+    private BigDecimal limitAmount;
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+}

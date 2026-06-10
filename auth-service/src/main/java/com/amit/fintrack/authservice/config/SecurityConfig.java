@@ -1,8 +1,7 @@
 package com.amit.fintrack.authservice.config;
 
-import com.amit.fintrack.authservice.exception.RestAccessDeniedHandler;
 import com.amit.fintrack.authservice.exception.RestAuthenticationEntryPoint;
-import com.amit.fintrack.authservice.repository.UserRepository;
+import com.amit.fintrack.authservice.persistence.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -52,8 +51,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             AuthenticationProvider authenticationProvider,
-            RestAuthenticationEntryPoint restAuthenticationEntryPoint,
-            RestAccessDeniedHandler restAccessDeniedHandler
+            RestAuthenticationEntryPoint restAuthenticationEntryPoint
     ) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -61,9 +59,8 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authenticationProvider(authenticationProvider)
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(restAuthenticationEntryPoint)
-                        .accessDeniedHandler(restAccessDeniedHandler)
+                .exceptionHandling(exception ->
+                        exception.authenticationEntryPoint(restAuthenticationEntryPoint)
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
